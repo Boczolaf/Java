@@ -1,14 +1,14 @@
-package dataframe;
-import java.time.LocalDateTime;
-import java.util.Date;
+package dataframe.values;
 
-public class DateTimeValue extends Value{
+import java.time.LocalDateTime;
+
+public class DateTimeValue extends Value {
     private LocalDateTime val;
 
-    DateTimeValue() {
+    public DateTimeValue() {
     }
 
-    private DateTimeValue(String value) {
+    public DateTimeValue(String value) {
         val = LocalDateTime.parse(value);
     }
 
@@ -36,6 +36,10 @@ public class DateTimeValue extends Value{
         return new DateTimeValue(value);
     }
 
+    @Override
+    public Object getV() {
+        return val;
+    }
 
 
     @Override
@@ -75,11 +79,11 @@ public class DateTimeValue extends Value{
         else
             return false;
     }
-    public boolean equals(Object other){
-        if(this.val==other){
+
+    public boolean equals(Object other) {
+        if (this.val == other) {
             return true;
-        }
-        else return false;
+        } else return false;
     }
 
 
@@ -101,21 +105,18 @@ public class DateTimeValue extends Value{
     }
 
 
-
     @Override
     public boolean neq(Value v) {
         return !eq(v);
     }
+
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return this.val.hashCode();
     }
-    @Override
-    public Object GetValue() {
-        return this.val;
-    }
 
-    protected Value clone(){
+
+    protected Value clone() {
         return new DateTimeValue(val);
     }
 }

@@ -1,7 +1,7 @@
-package dataframe;
+package dataframe.Exceptions;
 
 public class TriedToDivideByZero extends RuntimeException {
-    TriedToDivideByZero(String message){
+    public TriedToDivideByZero(String message) {
         System.out.print(message);
     }
 }

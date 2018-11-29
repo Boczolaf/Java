@@ -1,21 +1,20 @@
-package dataframe;
-import java.util.ArrayList;
+package dataframe.values;
 
-public class COOValue extends Value{
-    int Index;
+public class COOValue extends Value {
+    int index;
     Value value;
-    public COOValue(int NewIndex, Value NewValue){
-        int k = (Integer) NewIndex;
-       Index=k;
-        value = NewValue;
+
+    public COOValue(int newindex, Value newvalue) {
+        int k = (Integer) newindex;
+        index = k;
+        value = newvalue;
     }
-    public Object GetIndex(){
-        return Index;
+
+    public Object GetIndex() {
+        return index;
     }
-    @Override
-    public Object GetValue(){
-        return value;
-    }
+
+
     @Override
     public String toString() {
         String ReturnString = value.toString();
@@ -24,37 +23,37 @@ public class COOValue extends Value{
 
     @Override
     public Value add(Value v) {
-        Value ReturnValue = new COOValue(Index,v.add(value));
+        Value ReturnValue = new COOValue(index, v.add(value));
         return ReturnValue;
     }
 
     @Override
     public Value sub(Value v) {
-        Value ReturnValue = new COOValue(Index,value.sub(v));
+        Value ReturnValue = new COOValue(index, value.sub(v));
         return ReturnValue;
     }
 
     @Override
     public Value mul(Value v) {
-        Value ReturnValue = new COOValue(Index,value.mul(v));
+        Value ReturnValue = new COOValue(index, value.mul(v));
         return ReturnValue;
     }
 
     @Override
-    public Value div(Value v)   {
-        Value ReturnValue = new COOValue(Index, value.div(v));
+    public Value div(Value v) {
+        Value ReturnValue = new COOValue(index, value.div(v));
         return ReturnValue;
     }
 
     @Override
     public Value pow(Value v) {
-        Value ReturnValue = new COOValue(Index,value.pow(v));
+        Value ReturnValue = new COOValue(index, value.pow(v));
         return ReturnValue;
     }
 
     @Override
     public boolean eq(Value v) {
-        boolean returnvalue = (value.toString()==v.toString());
+        boolean returnvalue = (value.toString() == v.toString());
         return returnvalue;
     }
 
@@ -85,22 +84,28 @@ public class COOValue extends Value{
     @Override
     public int hashCode() {
         int prime = 27;
-        int result=0;
-        result = prime*value.hashCode()+20000;
+        int result = 0;
+        result = prime * value.hashCode() + 20000;
         return result;
     }
 
     @Override
     public Value create(String s) {
-        Value returnvalue = new COOValue(Index,new StrValue(s));
+        Value returnvalue = new COOValue(index, new StrValue(s));
         return returnvalue;
     }
-    public void print(){
+
+    @Override
+    public Object getV() {
+        return value;
+    }
+
+    public void print() {
         System.out.print(this.value);
         System.out.print("\n");
     }
 
-    protected Value clone(){
-        return new COOValue(Index,value);
+    protected Value clone() {
+        return new COOValue(index, value);
     }
 }

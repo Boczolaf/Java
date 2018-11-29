@@ -1,10 +1,14 @@
-package dataframe;
+package dataframe.values;
+
+import dataframe.Exceptions.TriedToDivideByZero;
 
 public class FloatValue extends Value {
-    public float value;
-    FloatValue(float newvalue){
+    private float value;
+
+    public FloatValue(float newvalue) {
         value = newvalue;
     }
+
     @Override
     public String toString() {
         String ReturnString = Float.toString(value);
@@ -13,72 +17,72 @@ public class FloatValue extends Value {
 
     @Override
     public Value add(Value v) {
-        Value ReturnValue = new FloatValue(this.value+Float.parseFloat(v.toString()));
+        Value ReturnValue = new FloatValue(this.value + Float.parseFloat(v.toString()));
         return ReturnValue;
     }
 
     @Override
     public Value sub(Value v) {
-        Value ReturnValue = new FloatValue(this.value-Float.parseFloat(v.toString()));
+        Value ReturnValue = new FloatValue(this.value - Float.parseFloat(v.toString()));
         return ReturnValue;
     }
 
     @Override
     public Value mul(Value v) {
-        Value ReturnValue = new FloatValue(this.value*Float.parseFloat(v.toString()));
+        Value ReturnValue = new FloatValue(this.value * Float.parseFloat(v.toString()));
         return ReturnValue;
     }
 
     @Override
-    public Value div(Value v)  {
-        if(Float.parseFloat(v.toString())==0){
+    public Value div(Value v) {
+        if (Float.parseFloat(v.toString()) == 0) {
             throw new TriedToDivideByZero("Tried to divide by zero");
         }
-        Value ReturnValue = new FloatValue(this.value/Float.parseFloat(v.toString()));
+        Value ReturnValue = new DblValue(this.value / Double.parseDouble(v.toString()));
         return ReturnValue;
     }
 
     @Override
     public Value pow(Value v) {
-        Value ReturnValue = new FloatValue((int)Math.pow(this.value,Float.parseFloat(v.toString())));
+        Value ReturnValue = new FloatValue((int) Math.pow(this.value, Float.parseFloat(v.toString())));
         return ReturnValue;
     }
 
     @Override
     public boolean eq(Value v) {
-        boolean returnvalue = (value==Float.parseFloat(v.toString()));
+        boolean returnvalue = (value == Float.parseFloat(v.toString()));
         return returnvalue;
     }
 
     @Override
     public boolean lte(Value v) {
-        boolean returnvalue = (value<=Float.parseFloat(v.toString()));
+        boolean returnvalue = (value <= Float.parseFloat(v.toString()));
         return returnvalue;
     }
 
     @Override
     public boolean gte(Value v) {
-        boolean returnvalue = (value>=Float.parseFloat(v.toString()));
+        boolean returnvalue = (value >= Float.parseFloat(v.toString()));
         return returnvalue;
     }
 
     @Override
     public boolean neq(Value v) {
-        boolean returnvalue = (value!=Float.parseFloat(v.toString()));
+        boolean returnvalue = (value != Float.parseFloat(v.toString()));
         return returnvalue;
     }
 
     @Override
     public boolean equals(Object other) {
-        boolean returnvalue = (value==Float.parseFloat(other.toString()));
+        boolean returnvalue = (value == Float.parseFloat(other.toString()));
         return returnvalue;
     }
 
     @Override
     public int hashCode() {
         int prime = 27;
-        int result=0;
-        result = prime*(int)value+20000;
+        int result = 0;
+        result = prime * (int) value + 20000;
         return result;
     }
 
@@ -87,16 +91,19 @@ public class FloatValue extends Value {
         Value returnvalue = new FloatValue(Float.parseFloat(s));
         return returnvalue;
     }
-    public void print(){
+
+    @Override
+    public Object getV() {
+        return value;
+    }
+
+    public void print() {
         System.out.print(this.value);
         System.out.print("\n");
     }
-    @Override
-    public Object GetValue() {
-        return this.value;
-    }
 
-    protected Value clone(){
+
+    protected Value clone() {
         return new FloatValue(value);
     }
 }
