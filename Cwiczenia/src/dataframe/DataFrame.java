@@ -22,6 +22,13 @@ public class DataFrame implements Groupby {
     }
 
     public String specialSnowflake;
+    private Value id;
+    public Value getId(){
+        return id;
+    }
+    public void setId(Value v){
+        id=v;
+    }
 
     public DataFrame(String[] namesofcolumns, Type[] typesofcolumns) {
         if (namesofcolumns.length != typesofcolumns.length) {
@@ -41,6 +48,7 @@ public class DataFrame implements Groupby {
     public DataFrame(SingleColumn[] columns) {
         for (int i = 0; i < columns.length; ++i) {
             mydataframe.add(columns[i]);
+
             if (mydataframe.get(0).listofvalues.size() != mydataframe.get(i).listofvalues.size())
                 throw new RuntimeException("Wrong length of column");
         }
@@ -171,18 +179,55 @@ public class DataFrame implements Groupby {
 
     }
 
-    void SetSpecialSnowflake(String v) {
-        specialSnowflake = v;
-    }
 
-    DataFrame groupby(String id) {
-        SingleColumn[] Cols = new SingleColumn[sizeOfCol()];
-        int h = 0;
-        for (SingleColumn k : getArray()) {
-            Cols[h] = new SingleColumn(k);
+
+    ArrayList<DataFrame> groupby(String id) {
+        ArrayList<Value> unique = new ArrayList<>();
+        ArrayList<DataFrame> returnframe = new ArrayList<>();
+        Type[] types = new Type[getArray().size()-1] ;
+        String[] names = new String[getArray().size()-1];
+        SingleColumn specialone = get(id);
+        int h=0;
+        for(SingleColumn k: getArray()){
+            if(k!=specialone) {
+                types[h] = k.GetType();
+                names[h] = k.GetName();
+                h++;
+            }
+
         }
-        DataFrame returnframe = new DataFrame(Cols);
-        returnframe.SetSpecialSnowflake(id);
+        for(int i =0;i<sizeOfCol();i++){
+            if(!unique.contains(specialone.listofvalues.get(i))){
+                unique.add(specialone.listofvalues.get(i));
+            }
+
+        }
+        for(int i =0;i<unique.size();i++){
+            returnframe.add(new DataFrame(names,types));
+            returnframe.get(i).setId(unique.get(i));
+        }
+        Value[] values ;
+        int g ;
+        for(int i =0;i<sizeOfCol();i++){
+
+            values = new Value[getArray().size()-1];
+            g=0;
+            for(SingleColumn k: getArray()){
+                if(k!=specialone){
+                    values[g]=k.listofvalues.get(i);
+                    g++;
+                }
+            }
+
+
+            for(int j=0;j<returnframe.size();j++){
+                if(specialone.listofvalues.get(i).eq(returnframe.get(j).getId())){
+
+                    returnframe.get(j).add(values);
+                    break;
+                }
+            }
+        }
         return returnframe;
     }
 
