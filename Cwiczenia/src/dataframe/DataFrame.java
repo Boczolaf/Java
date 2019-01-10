@@ -3,6 +3,7 @@ package dataframe;
 import dataframe.Exceptions.TriedToDoInvalidColOperation;
 import dataframe.Interfaces.Applyable;
 import dataframe.Interfaces.Groupby;
+import dataframe.threads.*;
 import dataframe.types.Type;
 import dataframe.values.DblValue;
 import dataframe.values.IntValue;
@@ -13,15 +14,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class DataFrame implements Groupby {
-    private ArrayList<SingleColumn> mydataframe = new ArrayList<SingleColumn>();
+    private ArrayList<SingleColumn> mydataframe = new ArrayList<>();
 
     public DataFrame() {
     }
 
-    public String specialSnowflake;
+    private String specialSnowflake;
     private Value id;
     public Value getId(){
         return id;
@@ -53,7 +56,9 @@ public class DataFrame implements Groupby {
                 throw new RuntimeException("Wrong length of column");
         }
     }
-
+    public int width(){
+        return getArray().size();
+    }
     public void print() {
         for (int i = 0; i < this.sizeOfCol(); i++) {
             for (SingleColumn k : mydataframe) {
@@ -100,8 +105,8 @@ public class DataFrame implements Groupby {
                 Tab[i] = new SingleColumn(get(cols[i]));
             }
         }
-        DataFrame dataFrame = new DataFrame(Tab);
-        return dataFrame;
+
+        return new DataFrame(Tab);
 
     }
 
@@ -230,9 +235,54 @@ public class DataFrame implements Groupby {
         }
         return returnframe;
     }
+    public ArrayList<DataFrame> groupbythrd(String id){
+        int cores = Runtime.getRuntime().availableProcessors();
+        ArrayList<Value> unique = new ArrayList<>();
+        ArrayList<DataFrame> returnframe = new ArrayList<>();
+        Type[] types = new Type[getArray().size()-1] ;
+        String[] names = new String[getArray().size()-1];
+        SingleColumn specialone = get(id);
+        int h=0;
+        for(SingleColumn k: getArray()){
+            if(k!=specialone) {
+                types[h] = k.GetType();
+                names[h] = k.GetName();
+                h++;
+            }
+
+        }
+        for(int i =0;i<sizeOfCol();i++){
+            if(!unique.contains(specialone.listofvalues.get(i))){
+                unique.add(specialone.listofvalues.get(i));
+            }
+
+        }
+        for(int i =0;i<unique.size();i++){
+            returnframe.add(new DataFrame(names,types));
+            returnframe.get(i).setId(unique.get(i));
+        }
+
+
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for(int i =0;i<unique.size();i++){
+            Runnable worker = new WorkerThread(this,unique.get(i),returnframe.get(i),specialone);
+            executor.execute(worker);
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return returnframe;
+    }
 
     public DataFrame max() {
-        Value max = getArray().get(0).listofvalues.get(0);
+
+        Value max ;
         SingleColumn[] NewColumns = new SingleColumn[getArray().size()];
         int h = 0;
         for (SingleColumn k : getArray()) {
@@ -253,10 +303,36 @@ public class DataFrame implements Groupby {
         }
         return new DataFrame(NewColumns);
     }
+    public DataFrame maxthrd(){
+        int cores = Runtime.getRuntime().availableProcessors();
+        String[] names = new String[width()];
+        Type[] types = new Type[width()];
+        for(int i=0;i<width();i++){
+            names[i]=getArray().get(i).GetName();
+            types[i]=getArray().get(i).GetType();
+        }
+        DataFrame outputFrame = new DataFrame(names,types);
 
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for (SingleColumn k : getArray()) {
+            Runnable worker = new MaxThread(k,outputFrame);
+            executor.execute(worker);
+
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return outputFrame ;
+    }
 
     public DataFrame min() {
-        Value min = getArray().get(0).listofvalues.get(0);
+        Value min ;
         SingleColumn[] NewColumns = new SingleColumn[getArray().size()];
         int h = 0;
         for (SingleColumn k : getArray()) {
@@ -277,7 +353,33 @@ public class DataFrame implements Groupby {
         }
         return new DataFrame(NewColumns);
     }
+    public DataFrame minthrd(){
+        int cores = Runtime.getRuntime().availableProcessors();
+        String[] names = new String[width()];
+        Type[] types = new Type[width()];
+        for(int i=0;i<width();i++){
+            names[i]=getArray().get(i).GetName();
+            types[i]=getArray().get(i).GetType();
+        }
+        DataFrame outputFrame = new DataFrame(names,types);
 
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for (SingleColumn k : getArray()) {
+            Runnable worker = new MinThread(k,outputFrame);
+            executor.execute(worker);
+
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return outputFrame ;
+    }
 
     public DataFrame mean() {
         Value mean;
@@ -304,11 +406,38 @@ public class DataFrame implements Groupby {
         }
         return new DataFrame(NewColumns);
     }
+    public DataFrame meanthrd(){
+        int cores = Runtime.getRuntime().availableProcessors();
+        String[] names = new String[width()];
+        Type[] types = new Type[width()];
+        for(int i=0;i<width();i++){
+            names[i]=getArray().get(i).GetName();
+            types[i]=getArray().get(i).GetType();
+        }
+        DataFrame outputFrame = new DataFrame(names,types);
+
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for (SingleColumn k : getArray()) {
+            Runnable worker = new MeanThread(k,outputFrame);
+            executor.execute(worker);
+
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return outputFrame ;
+    }
 
 
     public DataFrame std() {
         DataFrame newmean = this.mean();
-        Value v = new IntValue(this.sizeOfCol());
+        Value v = new IntValue(this.sizeOfCol()-1);
         SingleColumn[] NewColumns = new SingleColumn[getArray().size()];
         Value Returnv = new DblValue(0);
         int h = 0;
@@ -329,6 +458,33 @@ public class DataFrame implements Groupby {
             }
         }
         return new DataFrame(NewColumns);
+    }
+    public DataFrame stdthrd(){
+        int cores = Runtime.getRuntime().availableProcessors();
+        String[] names = new String[width()];
+        Type[] types = new Type[width()];
+        for(int i=0;i<width();i++){
+            names[i]=getArray().get(i).GetName();
+            types[i]=getArray().get(i).GetType();
+        }
+        DataFrame outputFrame = new DataFrame(names,types);
+
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for (SingleColumn k : getArray()) {
+            Runnable worker = new StdThread(k,outputFrame);
+            executor.execute(worker);
+
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return outputFrame ;
     }
 
 
@@ -352,21 +508,50 @@ public class DataFrame implements Groupby {
         }
         return new DataFrame(NewColumns);
     }
+    public DataFrame sumthrd(){
+        int cores = Runtime.getRuntime().availableProcessors();
+        String[] names = new String[width()];
+        Type[] types = new Type[width()];
+        for(int i=0;i<width();i++){
+            names[i]=getArray().get(i).GetName();
+            types[i]=getArray().get(i).GetType();
+        }
+        DataFrame outputFrame = new DataFrame(names,types);
 
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for (SingleColumn k : getArray()) {
+            Runnable worker = new SumThread(k,outputFrame);
+            executor.execute(worker);
+
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return outputFrame ;
+    }
 
     public DataFrame var() {
-        DataFrame std = this.std();
-
+        DataFrame newmean = this.mean();
+        Value v = new IntValue(this.sizeOfCol()-1);
         SingleColumn[] NewColumns = new SingleColumn[getArray().size()];
         Value Returnv = new DblValue(0);
         int h = 0;
         for (SingleColumn k : getArray()) {
             if (specialSnowflake == null || specialSnowflake != k.GetName()) {
+                for (int i = 0; i < k.GetSize(); i++) {
+                    Returnv = Returnv.add((k.listofvalues.get(i).sub( newmean.getArray().get(h).listofvalues.get(0))).pow(new DblValue(2)));
+                }
+                Returnv = Returnv.div(v);
 
-                Returnv =std.getArray().get(h).listofvalues.get(0).pow(new DblValue(2));
                 NewColumns[h] = new SingleColumn(k.GetName(), k.GetType());
                 NewColumns[h].listofvalues.add(Returnv);
-                Returnv = new IntValue(0);
+                Returnv = new DblValue(0);
                 h++;
             } else {
                 NewColumns[h] = new SingleColumn(k);
@@ -375,7 +560,33 @@ public class DataFrame implements Groupby {
         }
         return new DataFrame(NewColumns);
     }
+    public DataFrame varthrd(){
+        int cores = Runtime.getRuntime().availableProcessors();
+        String[] names = new String[width()];
+        Type[] types = new Type[width()];
+        for(int i=0;i<width();i++){
+            names[i]=getArray().get(i).GetName();
+            types[i]=getArray().get(i).GetType();
+        }
+        DataFrame outputFrame = new DataFrame(names,types);
 
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+        for (SingleColumn k : getArray()) {
+            Runnable worker = new VarThread(k,outputFrame);
+            executor.execute(worker);
+
+        }
+        executor.shutdown();
+        try {
+            while(!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                //do nothing, just wait
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executor.shutdownNow();
+        }
+        return outputFrame ;
+    }
 
     public DataFrame apply(Applyable operation) {
         SingleColumn[] Cols = new SingleColumn[sizeOfCol()];
